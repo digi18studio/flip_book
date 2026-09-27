@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-env="default">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Flip Book by Digi18 STUDIOS (HS)</title>
+    <meta name="description" content="Convert your PDFs into realistic 3D interactive flipbooks with page-turning animations, sound effects, text search, bookmarks, and PWA offline support.">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Local Vendor Libraries (100% Standalone Offline) -->
+    <script src="vendor/lucide.min.js"></script>
+    <script src="vendor/pdf.min.js"></script>
+    <script src="vendor/page-flip.browser.js"></script>
+
+    <!-- App Styling -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Header Bar -->
+        <header class="top-header">
+            <div class="header-left">
+                <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar Drawer" aria-label="Toggle Sidebar">
+                    <i data-lucide="panel-left-open"></i>
+                </button>
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i data-lucide="book-open-check"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>3D Flip Book <span>by Digi18 STUDIOS (HS)</span></h1>
+                        <p id="doc-title" class="doc-subtitle">Interactive PDF Suite</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="file-upload-wrapper">
+                    <input type="file" id="pdf-file-input" accept="application/pdf" hidden>
+                    <button id="btn-upload" class="btn btn-primary" title="Upload your PDF file">
+                        <i data-lucide="upload-cloud"></i>
+                        <span>Upload PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- Environment Selector Dropdown -->
+                <div class="env-selector-wrapper">
+                    <select id="select-environment" class="env-select" title="Change 3D Background Environment">
+                        <option value="default">🌌 Default (Theme)</option>
+                        <option value="wood">🪵 Wooden Desk</option>
+                        <option value="white-marble">🏛️ White Marble</option>
+                        <option value="blue-marble">🌊 Blue Marble</option>
+                        <option value="white-bricks">🧱 White Bricks</option>
+                    </select>
+                </div>
+
+                <button id="btn-open-search" class="icon-btn" title="Search Document Text" aria-label="Search Text">
+                    <i data-lucide="search"></i>
+                </button>
+
+                <button id="btn-ambient" class="icon-btn" title="Toggle Focus Rain Ambience" aria-label="Ambient Rain">
+                    <i data-lucide="cloud-rain"></i>
+                </button>
+
+                <button id="btn-sound" class="icon-btn" title="Toggle Sound Effects" aria-label="Toggle Sound Effects">
+                    <i data-lucide="volume-2"></i>
+                </button>
+
+                <button id="btn-theme" class="icon-btn" title="Toggle Dark/Light Theme" aria-label="Toggle Theme">
+                    <i data-lucide="sun"></i>
+                </button>
+
+                <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+                    <i data-lucide="maximize"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body Workspace -->
+        <main class="workspace">
+            <!-- Left Sidebar - Multi-Tab Drawer -->
+            <aside id="sidebar" class="sidebar collapsed">
+                <div class="sidebar-header">
+                    <div class="sidebar-tabs">
+                        <button class="sidebar-tab active" data-tab="thumbnails" title="Page Thumbnails">
+                            <i data-lucide="grid"></i> Pages
+                        </button>
+                        <button class="sidebar-tab" data-tab="chapters" title="Table of Contents">
+                            <i data-lucide="list-tree"></i> Chapters
+                        </button>
+                        <button class="sidebar-tab" data-tab="bookmarks" title="Saved Bookmarks">
+                            <i data-lucide="bookmark"></i> Saved
+                        </button>
+                    </div>
+                    <button id="btn-close-sidebar" class="icon-btn small">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+
+                <!-- Tab Panels -->
+                <div class="sidebar-content">
+                    <!-- Tab 1: Thumbnails -->
+                    <div id="panel-thumbnails" class="tab-panel active">
+                        <div id="thumbnails-list" class="thumbnails-grid"></div>
+                    </div>
+
+                    <!-- Tab 2: Chapters -->
+                    <div id="panel-chapters" class="tab-panel">
+                        <div id="chapters-list" class="chapters-tree">
+                            <p class="empty-state-text">No chapter outline detected in this PDF.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Bookmarks -->
+                    <div id="panel-bookmarks" class="tab-panel">
+                        <div id="bookmarks-list" class="bookmarks-grid">
+                            <p class="empty-state-text">No bookmarks saved yet. Click the bookmark icon on the toolbar to add one.</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Book Viewport -->
+            <div id="viewport" class="viewport">
+                <!-- Welcome Card -->
+                <div id="welcome-state" class="welcome-card">
+                    <div class="welcome-icon">
+                        <i data-lucide="book-marked"></i>
+                    </div>
+                    <h2>Transform PDFs into 3D Flip Books</h2>
+                    <p>Experience ultra-realistic page turns, 3D depth, text search, bookmarks, focus audio, and standalone offline PWA support.</p>
+
+                    <div class="welcome-actions">
+                        <button class="btn btn-primary btn-lg" onclick="document.getElementById('pdf-file-input').click()">
+                            <i data-lucide="file-up"></i>
+                            Select a PDF File
+                        </button>
+                        <button class="btn btn-glass btn-lg" id="btn-demo-welcome">
+                            <i data-lucide="book-open"></i>
+                            View Sample Brochure
+                        </button>
+                    </div>
+
+                    <div class="feature-badges">
+                        <span><i data-lucide="shield-check"></i> 100% Private (Runs in Browser)</span>
+                        <span><i data-lucide="search"></i> Text Search</span>
+                        <span><i data-lucide="smartphone"></i> Mobile Touch & PWA</span>
+                        <span><i data-lucide="cloud-rain"></i> Focus Audio</span>
+                    </div>
+                </div>
+
+                <!-- Loading State Overlay -->
+                <div id="loading-state" class="loading-overlay hidden">
+                    <div class="spinner"></div>
+                    <h3 id="loading-title">Parsing Document...</h3>
+                    <p id="loading-subtitle">Rendering high-resolution pages</p>
+                    <div class="progress-bar-container">
+                        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Flipbook Container -->
+                <div id="book-wrapper" class="book-wrapper hidden">
+                    <div id="flipbook" class="flipbook">
+                        <!-- Pages dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drag and Drop Overlay -->
+            <div id="dropzone" class="dropzone-overlay hidden">
+                <div class="dropzone-content">
+                    <i data-lucide="file-down"></i>
+                    <h2>Drop PDF File Here</h2>
+                    <p>Release to open in 3D FlipBook</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Search Modal Overlay -->
+        <div id="search-modal" class="search-modal-overlay hidden">
+            <div class="search-modal-card">
+                <div class="search-modal-header">
+                    <div class="search-input-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="input-search-query" placeholder="Search text inside document..." autofocus>
+                        <button id="btn-clear-search" class="icon-btn small"><i data-lucide="x"></i></button>
+                    </div>
+                    <button id="btn-close-search" class="icon-btn small"><i data-lucide="x"></i></button>
+                </div>
+                <div id="search-results-list" class="search-results-list">
+                    <p class="search-hint">Type a word or phrase above to search this PDF document.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Floating Toolbar -->
+        <footer id="toolbar" class="bottom-toolbar hidden">
+            <div class="toolbar-group">
+                <button id="btn-first" class="icon-btn" title="First Page"><i data-lucide="chevrons-left"></i></button>
+                <button id="btn-prev" class="icon-btn" title="Previous Page"><i data-lucide="chevron-left"></i></button>
+            </div>
+
+            <div class="toolbar-group page-jump-group">
+                <span>Page</span>
+                <input type="number" id="input-page-num" min="1" value="1">
+                <span>of <strong id="total-pages-count">1</strong></span>
+            </div>
+
+            <div class="toolbar-group">
+                <button id="btn-next" class="icon-btn" title="Next Page"><i data-lucide="chevron-right"></i></button>
+                <button id="btn-last" class="icon-btn" title="Last Page"><i data-lucide="chevrons-right"></i></button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Slideshow / Auto-Play -->
+            <div class="toolbar-group">
+                <button id="btn-slideshow" class="icon-btn" title="Toggle Auto-Play Slideshow">
+                    <i data-lucide="play"></i>
+                </button>
+                <select id="select-slideshow-speed" class="toolbar-select" title="Auto-Play Delay">
+                    <option value="3000">3s</option>
+                    <option value="5000" selected>5s</option>
+                    <option value="10000">10s</option>
+                </select>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Bookmark & Export -->
+            <div class="toolbar-group">
+                <button id="btn-bookmark" class="icon-btn" title="Bookmark Current Page">
+                    <i data-lucide="bookmark"></i>
+                </button>
+                <button id="btn-export-png" class="icon-btn" title="Export High-Res PNG Image">
+                    <i data-lucide="download"></i>
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button id="btn-zoom-out" class="icon-btn" title="Zoom Out"><i data-lucide="zoom-out"></i></button>
+                <span id="zoom-level-text" class="zoom-indicator">100%</span>
+                <button id="btn-zoom-in" class="icon-btn" title="Zoom In"><i data-lucide="zoom-in"></i></button>
+                <button id="btn-zoom-reset" class="icon-btn" title="Reset Zoom"><i data-lucide="rotate-ccw"></i></button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button id="btn-minimize-toolbar" class="icon-btn" title="Minimize Toolbar">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </div>
+        </footer>
+
+        <!-- Minimized Floating Toolbar Trigger Icon Button -->
+        <button id="btn-expand-toolbar" class="toolbar-expand-trigger hidden" title="Expand Toolbar">
+            <i data-lucide="sliders-horizontal"></i>
+        </button>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/pdf-engine.js"></script>
+    <script src="js/flipbook-engine.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Register PWA Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('PWA Registration failed:', err));
+      }
+    </script>
+</body>
+</html>
